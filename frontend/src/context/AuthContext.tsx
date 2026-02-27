@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { fetchApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
@@ -10,41 +10,51 @@ interface User {
     roles: string[];
 }
 
+interface Credentials {
+    email: string;
+    password: string;
+}
+
+interface RegisterData {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role?: string;
+}
+
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    login: (credentials: any) => Promise<void>;
-    register: (data: any) => Promise<void>;
+    login: (credentials: Credentials) => Promise<void>;
+    register: (data: RegisterData) => Promise<void>;
     logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<User | null>(() => {
+        if (typeof window === "undefined") return null;
+        const storedUser = localStorage.getItem("user");
+        return storedUser ? (JSON.parse(storedUser) as User) : null;
+    });
+    const loading = false;
     const router = useRouter();
 
-    useEffect(() => {
-        // Check if token and user data exist in localStorage
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-        setLoading(false);
-    }, []);
-
-    const login = async (credentials: any) => {
-        const data = await fetchApi("/auth/signin", {
+    const login = async (credentials: Credentials) => {
+        const raw = await fetchApi("/auth/signin", {
             method: "POST",
             body: JSON.stringify(credentials),
         });
 
+        const data = raw as { jwt?: string; token?: string; accessToken?: string; id: number; username: string; roles: string[] };
+
         // Store token
-        localStorage.setItem("token", data.jwt || data.token || data.accessToken);
+        localStorage.setItem("token", data.jwt ?? data.token ?? data.accessToken ?? "");
 
         // Store user info
-        const userData = {
+        const userData: User = {
             id: data.id,
             username: data.username,
             roles: data.roles,
@@ -54,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push("/");
     };
 
-    const register = async (data: any) => {
+    const register = async (data: RegisterData) => {
         await fetchApi("/auth/signup", {
             method: "POST",
             body: JSON.stringify(data),

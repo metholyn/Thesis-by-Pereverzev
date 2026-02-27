@@ -3,14 +3,22 @@
 import { useState, useEffect } from "react";
 import { fetchApi } from "@/lib/api";
 
+interface UserDto {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+}
+
 export default function AdminUsersPage() {
-    const [users, setUsers] = useState<any[]>([]);
+    const [users, setUsers] = useState<UserDto[]>([]);
     const [loading, setLoading] = useState(true);
 
     const loadUsers = async () => {
         try {
             const data = await fetchApi("/users");
-            setUsers(data);
+            setUsers(data as UserDto[]);
         } catch (error) {
             console.error("Failed to load users", error);
         } finally {
@@ -27,8 +35,8 @@ export default function AdminUsersPage() {
             await fetchApi(`/users/${userId}/card`, { method: "POST" });
             alert("Card created successfully!");
             loadUsers(); // refresh data
-        } catch (error: any) {
-            alert("Failed to create card: " + error.message);
+        } catch (error: unknown) {
+            alert("Failed to create card: " + (error instanceof Error ? error.message : String(error)));
         }
     };
 

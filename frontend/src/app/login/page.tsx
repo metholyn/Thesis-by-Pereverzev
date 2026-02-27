@@ -14,8 +14,8 @@ export default function LoginPage() {
         e.preventDefault();
         try {
             await login({ email, password });
-        } catch (err: any) {
-            setError(err.message || "Failed to login");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to login");
         }
     };
 
@@ -51,7 +51,7 @@ export default function LoginPage() {
                     Sign In
                 </button>
                 <div className="mt-4 text-center text-sm text-gray-600">
-                    Don't have an account? <Link href="/register" className="text-blue-600 hover:underline">Register</Link>
+                    Don&apos;t have an account? <Link href="/register" className="text-blue-600 hover:underline">Register</Link>
                 </div>
             </form>
         </div>

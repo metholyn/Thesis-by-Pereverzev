@@ -3,8 +3,18 @@
 import { useState, useEffect } from "react";
 import { fetchApi } from "@/lib/api";
 
+interface Book {
+    id: number;
+    title: string;
+    author: string;
+    isbn: string;
+    publishedYear: number;
+    totalCopies: number;
+    availableCopies: number;
+}
+
 export default function AdminBooksPage() {
-    const [books, setBooks] = useState<any[]>([]);
+    const [books, setBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState(true);
     const [form, setForm] = useState({
         title: "", author: "", isbn: "", publishedYear: 2024, totalCopies: 1, availableCopies: 1
@@ -13,7 +23,7 @@ export default function AdminBooksPage() {
     const loadBooks = async () => {
         try {
             const data = await fetchApi("/books");
-            setBooks(data);
+            setBooks(data as Book[]);
         } catch (error) {
             console.error(error);
         } finally {
@@ -34,8 +44,8 @@ export default function AdminBooksPage() {
             });
             setForm({ title: "", author: "", isbn: "", publishedYear: 2024, totalCopies: 1, availableCopies: 1 });
             loadBooks();
-        } catch (error: any) {
-            alert("Error adding book: " + error.message);
+        } catch (error: unknown) {
+            alert("Error adding book: " + (error instanceof Error ? error.message : String(error)));
         }
     };
 
@@ -44,8 +54,8 @@ export default function AdminBooksPage() {
         try {
             await fetchApi(`/books/${id}`, { method: "DELETE" });
             loadBooks();
-        } catch (error: any) {
-            alert("Error deleting book: " + error.message);
+        } catch (error: unknown) {
+            alert("Error deleting book: " + (error instanceof Error ? error.message : String(error)));
         }
     };
 

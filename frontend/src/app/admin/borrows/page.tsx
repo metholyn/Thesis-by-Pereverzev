@@ -3,15 +3,22 @@
 import { useState, useEffect } from "react";
 import { fetchApi } from "@/lib/api";
 
+interface BorrowRecord {
+    id: number;
+    book: { title: string };
+    userCard: { cardNumber: string };
+    expectedReturnDate: string;
+}
+
 export default function AdminBorrowsPage() {
-    const [activeBorrows, setActiveBorrows] = useState<any[]>([]);
+    const [activeBorrows, setActiveBorrows] = useState<BorrowRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [issueForm, setIssueForm] = useState({ bookId: "", userCardId: "", daysToBorrow: 14 });
 
     const loadBorrows = async () => {
         try {
             const data = await fetchApi("/borrow/active");
-            setActiveBorrows(data);
+            setActiveBorrows(data as BorrowRecord[]);
         } catch (error) {
             console.error(error);
         } finally {
@@ -36,8 +43,8 @@ export default function AdminBorrowsPage() {
             });
             setIssueForm({ bookId: "", userCardId: "", daysToBorrow: 14 });
             loadBorrows();
-        } catch (error: any) {
-            alert("Error issuing book: " + error.message);
+        } catch (error: unknown) {
+            alert("Error issuing book: " + (error instanceof Error ? error.message : String(error)));
         }
     };
 
@@ -45,8 +52,8 @@ export default function AdminBorrowsPage() {
         try {
             await fetchApi(`/borrow/return/${recordId}`, { method: "POST" });
             loadBorrows();
-        } catch (error: any) {
-            alert("Error returning book: " + error.message);
+        } catch (error: unknown) {
+            alert("Error returning book: " + (error instanceof Error ? error.message : String(error)));
         }
     };
 
